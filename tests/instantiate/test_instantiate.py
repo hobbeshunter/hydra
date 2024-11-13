@@ -17,6 +17,7 @@ from hydra.test_utils.test_utils import assert_multiline_regex_search
 from hydra.types import ConvertMode, TargetConf
 from tests.instantiate import (
     AClass,
+    BClass,
     Adam,
     AdamConf,
     AnotherClass,
@@ -2095,3 +2096,33 @@ def test_dict_as_none(instantiate_func: Any) -> None:
     cfg = OmegaConf.structured(DictValuesConf)
     obj = instantiate_func(config=cfg)
     assert obj.d is None
+
+def test_delayed_factory_instantiation(instantiate_func: Any) -> None:
+    cfg = {
+        "_target_": "tests.instantiate.FactoryReceiver",
+        "factory": {
+            "_target_": "hydra.utils.Factory",
+            "_recursive_": False,
+            "cfg" : {
+                "a": "???",
+                "instance": {
+                    "_target_": "tests.instantiate.BClass",
+                    "a": "${..a}",
+                    "b": "5",
+                }
+            }
+        }
+    }
+    ret = instantiate_func(cfg, _strict_=False)
+
+    first_instance = ret.instantiate(a=AClass(a=2, b="foo",c=3.1415926))
+
+    assert isinstance(first_instance, BClass)
+    assert isinstance(first_instance.a, AClass)
+    assert first_instance.a.b == "foo"
+
+    second_instance = ret.instantiate(a=AClass(a=2, b="bar",c=3.1415926))
+
+    assert isinstance(second_instance, BClass)
+    assert isinstance(second_instance.a, AClass)
+    assert second_instance.a.b == "bar"

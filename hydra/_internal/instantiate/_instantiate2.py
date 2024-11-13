@@ -22,6 +22,7 @@ class _Keys(str, Enum):
     RECURSIVE = "_recursive_"
     ARGS = "_args_"
     PARTIAL = "_partial_"
+    STRICT = "_strict_"
 
 
 def _is_target(x: Any) -> bool:
@@ -217,7 +218,9 @@ def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
         if kwargs:
             config = OmegaConf.merge(config, kwargs)
 
-        OmegaConf.resolve(config)
+        _strict_ = config.pop(_Keys.STRICT, True)
+
+        OmegaConf.resolve(config, strict=_strict_)
 
         _recursive_ = config.pop(_Keys.RECURSIVE, True)
         _convert_ = config.pop(_Keys.CONVERT, ConvertMode.NONE)
@@ -235,7 +238,9 @@ def instantiate(config: Any, *args: Any, **kwargs: Any) -> Any:
         config_copy._set_parent(config._get_parent())
         config = config_copy
 
-        OmegaConf.resolve(config)
+        _strict_ = config.pop(_Keys.STRICT, True)
+
+        OmegaConf.resolve(config, strict=_strict_)
 
         _recursive_ = kwargs.pop(_Keys.RECURSIVE, True)
         _convert_ = kwargs.pop(_Keys.CONVERT, ConvertMode.NONE)

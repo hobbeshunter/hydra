@@ -5,6 +5,7 @@ import logging.config
 import os
 from pathlib import Path
 from typing import Any, Callable
+from omegaconf import DictConfig, OmegaConf
 
 import hydra._internal.instantiate._instantiate2
 import hydra.types
@@ -146,3 +147,15 @@ def to_hydra_override_value_str(obj: Any) -> str:
         new_str = obj.replace('\\"', '\\\\"').replace('"', '\\"')
         return f'"{new_str}"'
     return json.dumps(obj)
+
+
+class Factory:
+
+    def __init__(self, cfg: DictConfig):
+        self._cfg = cfg
+        self._cfg._set_flag(flags=["allow_objects", "struct", "readonly"],
+                            values=[True, False, False])
+
+    def __call__(self, _name_: str, **kwargs):
+        cfg = OmegaConf.merge(self._cfg, kwargs)
+        return instantiate(cfg.__getattr__(_name_), _convert_="object")

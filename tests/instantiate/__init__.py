@@ -8,6 +8,7 @@ from typing import Any, Dict, List, NoReturn, Optional, Tuple
 from omegaconf import MISSING, DictConfig, ListConfig
 
 from hydra.types import TargetConf
+from hydra.utils import Factory
 from tests.instantiate.module_shadowed_by_function import a_function
 
 module_shadowed_by_function = a_function
@@ -317,7 +318,8 @@ class Mapping:
 
 # Configs
 @dataclass
-class TransformConf: ...
+class TransformConf:
+    ...
 
 
 @dataclass
@@ -437,3 +439,12 @@ def recisinstance(got: Any, expected: Any) -> bool:
 
 
 an_object = object()
+
+
+class FactoryReceiver():
+
+    def __init__(self, factory: Factory):
+        self._factory = factory
+
+    def instantiate(self, **kwargs):
+        return self._factory(_name_="instance", **kwargs)
